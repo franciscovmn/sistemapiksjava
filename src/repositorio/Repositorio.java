@@ -14,18 +14,21 @@ import modelo.ContaEspecial;
 import modelo.Lancamento;
 
 public class Repositorio {
+    // Mapeia chavePIKS -> Conta
+    // Atende Regra 2: cada conta é identificada pela chave PIKS
     private static TreeMap<String, Conta> contasPIKS = new TreeMap<>();
     
-    // O mapa de clientes usa a classe wrapper 'Integer' como chave, 
-    // conforme a exigência do Java para tipos genéricos. 
-    // Isso corresponde ao 'integer' conceitual do diagrama UML.
+    // Mapeia CPF -> Cliente
+    // Atende Regra 1: cliente identificado pelo CPF, e cada cliente possui 1 conta
     private static TreeMap<Integer, Cliente> clientesCPF = new TreeMap<>();
 
-    // O bloco static garante que a leitura dos objetos seja feita assim que a classe for carregada.
+    // Bloco static garante que, assim que a classe for carregada,
+    // os objetos sejam lidos automaticamente dos arquivos CSV
     static {
         lerObjetos();
     }
 
+    // --- MÉTODOS DE CONTA ---
     public static void adicionarConta(Conta c) {
         contasPIKS.put(c.getChavePiks(), c);
     }
@@ -38,7 +41,7 @@ public class Repositorio {
         return contasPIKS.get(chave);
     }
 
-    // NOVO MÉTODO: Essencial para alterar a chave PIKS de forma consistente.
+    // Atualiza a chave PIKS de uma conta (Regra 4: chave PIKS pode ser substituída)
     public static void atualizarChavePiks(String chaveAntiga, String chaveNova) {
         Conta conta = contasPIKS.remove(chaveAntiga);
         if (conta != null) {
@@ -47,13 +50,12 @@ public class Repositorio {
         }
     }
 
+    // --- MÉTODOS DE CLIENTE ---
     public static void adicionarCliente(Cliente c) {
-        // Não é mais necessário fazer o parse, pois o CPF já é int.
         clientesCPF.put(c.getCpf(), c);
     }
 
     public static void removerCliente(Cliente c) {
-        // Não é mais necessário fazer o parse.
         clientesCPF.remove(c.getCpf());
     }
 
@@ -61,6 +63,7 @@ public class Repositorio {
         return clientesCPF.get(cpf);
     }
 
+    // --- LISTAGENS ---
     public static ArrayList<Conta> getContas() {
         return new ArrayList<>(contasPIKS.values());
     }
@@ -69,9 +72,10 @@ public class Repositorio {
         return new ArrayList<>(clientesCPF.values());
     }
 
+    // --- PERSISTÊNCIA (LER CSV) ---
     public static void lerObjetos() {
         try {
-            // Garante que os arquivos existam
+            // Garante que os arquivos existam mesmo na primeira execução
             File fContas = new File(new File(".\\contas.csv").getCanonicalPath());
             File fLancamentos = new File(new File(".\\lancamentos.csv").getCanonicalPath());
 
@@ -83,22 +87,24 @@ public class Repositorio {
         }
 
         try {
-            // Leitura de contas.csv
+            // --------- LEITURA DE CONTAS ---------
             File fContas = new File(new File(".\\contas.csv").getCanonicalPath());
             Scanner scannerContas = new Scanner(fContas);
             while (scannerContas.hasNextLine()) {
                 String linha = scannerContas.nextLine().trim();
                 if (linha.isEmpty()) continue;
                 
+                // Formato exigido pelo PDF: id;chavepiks;saldo;limite;cpf;nome
                 String[] partes = linha.split(";");
                 int id = Integer.parseInt(partes[0]);
                 String chave = partes[1];
                 double saldo = Double.parseDouble(partes[2]);
                 double limite = Double.parseDouble(partes[3]);
-                int cpf = Integer.parseInt(partes[4]); // CPF lido como int.
+                int cpf = Integer.parseInt(partes[4]);
                 String nome = partes[5];
 
-                Cliente cliente = new Cliente(cpf, nome, null); // Construtor usa cpf int.
+                // Cria cliente e conta correspondente
+                Cliente cliente = new Cliente(cpf, nome, null);
                 Conta conta;
                 if (limite > 0) {
                     conta = new ContaEspecial(id, chave, saldo, cliente, limite);
@@ -112,7 +118,7 @@ public class Repositorio {
             }
             scannerContas.close();
 
-            // Leitura de lancamentos.csv
+            // --------- LEITURA DE LANÇAMENTOS ---------
             File fLancamentos = new File(new File(".\\lancamentos.csv").getCanonicalPath());
             Scanner scannerLanc = new Scanner(fLancamentos);
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
@@ -120,6 +126,7 @@ public class Repositorio {
                 String linha = scannerLanc.nextLine().trim();
                  if (linha.isEmpty()) continue;
 
+                // Formato exigido pelo PDF: chavepiks;datahora;valor;tipo
                 String[] partes = linha.split(";");
                 String chave = partes[0];
                 LocalDateTime datahora = LocalDateTime.parse(partes[1], formatter);
@@ -139,6 +146,7 @@ public class Repositorio {
         }
     }
 
+    // --- PERSISTÊNCIA (GRAVAR CSV) ---
     public static void gravarObjetos() {
         try {
             File fContas = new File(new File(".\\contas.csv").getCanonicalPath());
@@ -147,18 +155,21 @@ public class Repositorio {
             File fLancamentos = new File(new File(".\\lancamentos.csv").getCanonicalPath());
             FileWriter writerLanc = new FileWriter(fLancamentos);
 
+            // Percorre todas as contas cadastradas
             for (Conta conta : getContas()) {
                 double limite = 0.0;
                 if (conta instanceof ContaEspecial) {
                     limite = ((ContaEspecial) conta).getLimite();
                 }
                 
-                // Grava o CPF (int) diretamente.
+                // Formato exigido: id;chavepiks;saldo;limite;cpf;nome
                 String linhaConta = conta.getId() + ";" + conta.getChavePiks() + ";" + conta.getSaldo() + ";" + limite + ";" +
                                     conta.getCliente().getCpf() + ";" + conta.getCliente().getNome();
                 writerContas.write(linhaConta + "\n");
                 
+                // Para cada conta, grava também seus lançamentos
                 for(Lancamento lanc : conta.getLancamentos()){
+                     // Formato: chavepiks;datahora;valor;tipo
                      String linhaLanc = conta.getChavePiks() + ";" + lanc.getDatahoraFormatada() + ";" + lanc.getValor() + ";" + lanc.getTipo();
                      writerLanc.write(linhaLanc + "\n");
                 }
