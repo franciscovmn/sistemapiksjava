@@ -1,0 +1,20 @@
+# Arquivos de bytecode compilados do Java
+/bin/
+
+# Arquivos de log e temporários
+*.log
+*.tmp
+
+# Arquivos específicos do sistema operacional
+.DS_Store
+desktop.ini
+
+# Arquivos de configuração de IDEs
+.classpath
+.project
+.settings/
+*.iml
+
+# Arquivos CSV gerados pelo programa
+contas.csv
+lancamentos.csv

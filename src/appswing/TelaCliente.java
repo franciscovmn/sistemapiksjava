@@ -74,7 +74,6 @@ public class TelaCliente {
 	        public void mouseClicked(MouseEvent e) {
 	            label.setText("");
 	            if (table.getSelectedRow() >= 0) {
-	                // CORREÇÃO: O CPF na tabela é uma String, não Integer
 	                String cpf = (String) table.getValueAt(table.getSelectedRow(), 0);
 	                String nome = (String) table.getValueAt(table.getSelectedRow(), 1);
 	                textField_CPF.setText(cpf);
@@ -96,7 +95,6 @@ public class TelaCliente {
 	    table.setShowGrid(true);
 	    table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
-	 // Dentro do método initialize() da classe TelaCliente
 
 	    button = new JButton("Alterar cpf");
 	    button.setBackground(SystemColor.control);
@@ -107,7 +105,6 @@ public class TelaCliente {
 	                    throw new Exception("Selecione um cliente ou digite um CPF");
 	                }
 
-	                // Guarda o CPF antigo que será usado para localizar o cliente
 	                int cpfAntigo = Integer.parseInt(textField_CPF.getText());
 	                Cliente cli = Repositorio.localizarCliente(cpfAntigo);
 	                
@@ -116,30 +113,24 @@ public class TelaCliente {
 	                }
 	                String nome = cli.getNome();
 
-	                // Pede o novo CPF
 	                String resposta = JOptionPane.showInputDialog(frame, "Digite o novo CPF para " + nome);
 	                if (resposta == null || resposta.isEmpty()) {
 	                    label.setText("Alteração cancelada.");
-	                    return; // Encerra a operação se o usuário cancelar
+	                    return; 
 	                }
 	                int novocpf = Integer.parseInt(resposta);
 
-	                // Verifica se o novo CPF já está em uso por outro cliente
+	               
 	                Cliente cliaux = Repositorio.localizarCliente(novocpf);
 	                if (cliaux != null) {
 	                    throw new Exception("CPF " + novocpf + " já cadastrado - alteração cancelada");
 	                }
 	                
-	                // --- LÓGICA DA CORREÇÃO ---
-	                // 1. Remove o cliente do repositório usando a chave antiga
 	                Repositorio.removerCliente(cli);
 	                
-	                // 2. Atualiza o CPF dentro do objeto cliente
 	                cli.setCpf(novocpf);
 	                
-	                // 3. Adiciona o cliente de volta ao repositório, que agora usará a nova chave
 	                Repositorio.adicionarCliente(cli);
-	                // --- FIM DA CORREÇÃO ---
 	                
 	                Repositorio.gravarObjetos();
 	                label.setText("CPF alterado de " + cpfAntigo + " para " + novocpf);

@@ -55,7 +55,6 @@ public class Conta {
         this.adicionarLanc(new Lancamento(this.chavePiks, valor, "-"));
     }
     
-    // ---- CORREÇÕES APLICADAS AQUI ----
 
     /**
      * Método principal de transferência.
@@ -64,12 +63,10 @@ public class Conta {
      * @param destino A conta que receberá o valor.
      */
     public void transferir(double valor, Conta destino) {
-        // CORREÇÃO 1: Adicionada verificação para garantir que o destino não é nulo.
         if (destino == null) {
             throw new IllegalArgumentException("A conta de destino não pode ser nula.");
         }
         
-        // CORREÇÃO 2: A verificação de contas diferentes foi movida para o início,
         // garantindo que a regra de negócio seja checada antes de qualquer operação.
         if (this.equals(destino)) {
             throw new IllegalArgumentException("Conta de origem e destino devem ser diferentes.");
