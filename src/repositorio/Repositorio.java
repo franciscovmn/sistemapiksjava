@@ -1,8 +1,3 @@
-/**********************************
- * IFPB - Curso Superior de Tec. em Sist. para Internet
- * POO
- * Prof. Fausto Maranh�o Ayres
- **********************************/
 package repositorio;
 
 import java.io.File;
@@ -11,6 +6,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.TreeMap;
 
 import modelo.Cliente;
 import modelo.Conta;
@@ -21,6 +17,7 @@ public class Repositorio {
     private static TreeMap<String, Conta> contasPIKS = new TreeMap<>();
     private static TreeMap<Integer, Cliente> clientesCPF = new TreeMap<>();
 
+    // O bloco static garante que a leitura dos objetos seja feita assim que a classe for carregada.
     static {
         lerObjetos();
     }
@@ -57,117 +54,104 @@ public class Repositorio {
         return new ArrayList<>(clientesCPF.values());
     }
 
-	public static void lerObjetos() {
-		try {
-			// caso os arquivos nao existam, serao criados vazios
-			File f1 = new File(new File(".\\contasPIKS.csv").getCanonicalPath());
-			File f2 = new File(new File(".\\lancamentos.csv").getCanonicalPath());
-			if (!f1.exists() || !f2.exists()) {
-				System.out.println("criando arquivo .csv vazio");
-				FileWriter arqconta = new FileWriter(f1);
-				FileWriter arqlancamento = new FileWriter(f2);
-				arqconta.close();
-				arqlancamento.close();
-				return;
-			}
-		} catch (Exception ex) {
-			throw new RuntimeException("criacao dos arquivos vazios:" + ex.getMessage());
-		}
+    public static void lerObjetos() {
+        try {
+            // Garante que os arquivos existam
+            File fContas = new File(new File(".\\contas.csv").getCanonicalPath());
+            File fLancamentos = new File(new File(".\\lancamentos.csv").getCanonicalPath());
 
-		try {
-			int id;
-			double saldo, limite;
-			String linha;
-			String[] partes;
-			Cliente cliente;
-			Conta conta;
-			String chave, nome;
-			int cpf;
+            if (!fContas.exists()) fContas.createNewFile();
+            if (!fLancamentos.exists()) fLancamentos.createNewFile();
 
-			File f1 = new File(new File(".\\contasPIKS.csv").getCanonicalPath());
-			Scanner arqconta = new Scanner(f1);
-			System.out.println("Repositorio - lendo objetos...");
-			while (arqconta.hasNextLine()) {
-				linha = arqconta.nextLine().trim();
-				partes = linha.split(";");
-				//System.out.println(Arrays.toString(partes));
-				id = Integer.parseInt(partes[0]);
-				chave = partes[1];
-				saldo = Double.parseDouble(partes[2]);
-				limite = Double.parseDouble(partes[3]); // <>0=ContaEspecial
-				cpf = Integer.parseInt(partes[4]);
-				nome = partes[5];
-				cliente = new Cliente(cpf, nome);
-				if (limite == 0.0)
-					conta = new Conta(id, chave, saldo);
-				else
-					conta = new ContaEspecial(id, chave, saldo, limite);
+        } catch (Exception ex) {
+            throw new RuntimeException("Erro ao criar arquivos vazios: " + ex.getMessage());
+        }
 
-				cliente.setConta(conta);
-				conta.setCliente(cliente);
-				adicionarConta(conta);
-				adicionarCliente(cliente);
-			}
-			arqconta.close();
-			
-			Lancamento lanc ;
-			LocalDateTime datahora;
-			double valor;
-			String tipo;
-			File f2 = new File(new File(".\\lancamentos.csv").getCanonicalPath());
-			Scanner arqlan = new Scanner(f2);
-			while (arqlan.hasNextLine()) {
-				linha = arqlan.nextLine().trim();
-				partes = linha.split(";");
-				//System.out.println(Arrays.toString(partes));
-				chave = partes[0];
-				datahora = LocalDateTime.parse(partes[1], DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
-				valor = Double.parseDouble(partes[2]);
-				tipo = partes[3];
-				lanc = new Lancamento(datahora,valor,tipo);
-				conta = localizarConta(chave);
-				conta.adicionar(lanc);
-			}
-			arqlan.close();
-		} catch (Exception ex) {
-			throw new RuntimeException("leitura arquivo de contasPIKS:" + ex.getMessage());
-		}
+        try {
+            // Leitura de contas.csv
+            File fContas = new File(new File(".\\contas.csv").getCanonicalPath());
+            Scanner scannerContas = new Scanner(fContas);
+            while (scannerContas.hasNextLine()) {
+                String linha = scannerContas.nextLine().trim();
+                if (linha.isEmpty()) continue;
+                
+                String[] partes = linha.split(";");
+                int id = Integer.parseInt(partes[0]);
+                String chave = partes[1];
+                double saldo = Double.parseDouble(partes[2]);
+                double limite = Double.parseDouble(partes[3]);
+                int cpf = Integer.parseInt(partes[4]);
+                String nome = partes[5];
 
-	}
+                Cliente cliente = new Cliente(String.valueOf(cpf), nome, null);
+                Conta conta;
+                if (limite > 0) {
+                    conta = new ContaEspecial(id, chave, saldo, cliente, limite);
+                } else {
+                    conta = new Conta(id, chave, saldo, cliente);
+                }
+                
+                cliente.setConta(conta);
+                adicionarConta(conta);
+                adicionarCliente(cliente);
+            }
+            scannerContas.close();
 
-	public static void gravarObjetos() {
-		// gravar nos arquivos csv os objetos que est�o no reposit�rio
-		try {
-			File f1 = new File(new File(".\\contasPIKS.csv").getCanonicalPath());
-			FileWriter arqconta = new FileWriter(f1);
-			File f2 = new File(new File(".\\lancamentos.csv").getCanonicalPath());
-			FileWriter arqlan = new FileWriter(f2);
-			String linha;
-			Double limite;
-			System.out.println("Repositorio - gravando objetos...");
-			for (Conta cta : contasPIKS.values()) {
-				if (cta instanceof ContaEspecial esp)
-					limite = esp.getLimite();
-				else
-					limite = 0.0;
-				linha = cta.getId()+ ";" + cta.getChavePiks() + ";" + cta.getSaldo() + ";" + limite + ";" +
-						cta.getCliente().getCpf() + ";"	+ cta.getCliente().getNome();
-				arqconta.write(linha + "\n");
-				// System.out.println("linha="+linha);
+            // Leitura de lancamentos.csv
+            File fLancamentos = new File(new File(".\\lancamentos.csv").getCanonicalPath());
+            Scanner scannerLanc = new Scanner(fLancamentos);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+            while (scannerLanc.hasNextLine()) {
+                String linha = scannerLanc.nextLine().trim();
+                 if (linha.isEmpty()) continue;
 
-				if (!cta.getLancamentos().isEmpty())
-					for (Lancamento lan : cta.getLancamentos()) {
-						String s = lan.getDatahora().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
-						arqlan.write(cta.getChavePiks()+";" +s+ ";"+ lan.getValor()+";"+lan.getTipo() +"\n");
-					}
-				
-			}
-			arqconta.close();
-			arqlan.close();
-			
-		} catch (Exception e) {
-			throw new RuntimeException("problema na cria��o do arquivo  contasPIKS " + e.getMessage());
-		}
+                String[] partes = linha.split(";");
+                String chave = partes[0];
+                LocalDateTime datahora = LocalDateTime.parse(partes[1], formatter);
+                double valor = Double.parseDouble(partes[2]);
+                String tipo = partes[3];
+                
+                Conta conta = localizarConta(chave);
+                if (conta != null) {
+                    Lancamento lanc = new Lancamento(chave, valor, tipo, datahora);
+                    conta.adicionarLanc(lanc);
+                }
+            }
+            scannerLanc.close();
 
-	}
+        } catch (Exception ex) {
+            throw new RuntimeException("Erro na leitura dos arquivos: " + ex.getMessage());
+        }
+    }
+
+    public static void gravarObjetos() {
+        try {
+            File fContas = new File(new File(".\\contas.csv").getCanonicalPath());
+            FileWriter writerContas = new FileWriter(fContas);
+            
+            File fLancamentos = new File(new File(".\\lancamentos.csv").getCanonicalPath());
+            FileWriter writerLanc = new FileWriter(fLancamentos);
+
+            for (Conta conta : getContas()) {
+                double limite = 0.0;
+                if (conta instanceof ContaEspecial) {
+                    limite = ((ContaEspecial) conta).getLimite();
+                }
+                
+                String linhaConta = conta.getId() + ";" + conta.getChavePiks() + ";" + conta.getSaldo() + ";" + limite + ";" +
+                                    conta.getCliente().getCpf() + ";" + conta.getCliente().getNome();
+                writerContas.write(linhaConta + "\n");
+                
+                for(Lancamento lanc : conta.getLancamentos()){
+                     String linhaLanc = conta.getChavePiks() + ";" + lanc.getDatahoraFormatada() + ";" + lanc.getValor() + ";" + lanc.getTipo();
+                     writerLanc.write(linhaLanc + "\n");
+                }
+            }
+            writerContas.close();
+            writerLanc.close();
+            
+        } catch (Exception e) {
+            throw new RuntimeException("Erro na gravação dos arquivos: " + e.getMessage());
+        }
+    }
 }

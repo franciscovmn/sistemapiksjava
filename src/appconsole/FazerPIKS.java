@@ -10,7 +10,8 @@ public class FazerPIKS {
 		Conta conta5 = Repositorio.localizarConta("chave5");
 		
 		try {
-			conta5.transferir(conta1, 5000.0);	
+			// Correção: (valor, destino)
+			conta5.transferir(5000.0, conta1);	
 			System.out.println("\ntransferiu da 5 para 1");
 			System.out.println(conta1);
 			System.out.println(conta5);
@@ -19,7 +20,8 @@ public class FazerPIKS {
 			System.out.println("--->" + e.getMessage());
 		}
 		try {
-			conta1.transferir(conta5, 5000.0);		
+            // Correção: (valor, destino)
+			conta1.transferir(5000.0, conta5);		
 			System.out.println("\ntransferiu da 1 para 5");
 			System.out.println(conta1);
 			System.out.println(conta5);

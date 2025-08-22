@@ -3,8 +3,8 @@ package modelo;
 public class ContaEspecial extends Conta {
     private double limite;
 
-    public ContaEspecial(int id, String chavePiks, double saldo, Cliente cliente, double limite) {
-        super(id, chavePiks, saldo, cliente);
+    public ContaEspecial(int id, String chavePiks, double limite) {
+        super(id, chavePiks); // Chama o construtor adicionado na classe pai
         this.limite = limite;
     }
 
@@ -13,11 +13,13 @@ public class ContaEspecial extends Conta {
 
     @Override
     public void debitar(double valor) {
-        if (valor <= 0) throw new IllegalArgumentException("Valor deve ser positivo");
-        double novoSaldo = getSaldo() - valor;
-        if (novoSaldo < -limite)
+        if (valor <= 0) throw new IllegalArgumentException("Valor do débito deve ser positivo");
+        
+        if (getSaldo() - valor < -limite)
             throw new IllegalStateException("Limite da conta especial excedido");
-        setSaldo(novoSaldo);
+        
+        setSaldo(getSaldo() - valor);
+        adicionarLanc(new Lancamento(getChavePiks(), valor, "-"));
     }
 
     @Override
