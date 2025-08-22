@@ -85,21 +85,33 @@ public class TelaConta {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				label.setText("");
-				// copiar dados (como string) da linha selecionada para os campos de texto
+				// copiar dados da linha selecionada para os campos de texto
 				if (table.getSelectedRow() >= 0) {
-					Integer id = (Integer) table.getValueAt(table.getSelectedRow(), 0);
-					String chave = (String) table.getValueAt(table.getSelectedRow(), 1);
-					Double saldo = (Double) table.getValueAt(table.getSelectedRow(), 2);
-					Double limite = (Double) table.getValueAt(table.getSelectedRow(), 3);
-					Integer cpf = (Integer) table.getValueAt(table.getSelectedRow(), 4);
-					String nome = (String) table.getValueAt(table.getSelectedRow(), 5);
-					textField.setText(id.toString());
-					label_saldo.setText("Saldo:" + saldo.toString());
-					textField_1.setText(cpf.toString());
-					textField_2.setText(nome);
-					textField_3.setText(limite.toString());
-					textField_4.setText(chave);
-					label_6.setText("selecionado=" + id);
+					// ===== INÍCIO DA CORREÇÃO =====
+					// Obter os valores da tabela como Object e converter para String
+					// antes de fazer o parse para o tipo numérico desejado.
+					Object idObj = table.getValueAt(table.getSelectedRow(), 0);
+					Object chaveObj = table.getValueAt(table.getSelectedRow(), 1);
+					Object saldoObj = table.getValueAt(table.getSelectedRow(), 2);
+					Object limiteObj = table.getValueAt(table.getSelectedRow(), 3);
+					Object cpfObj = table.getValueAt(table.getSelectedRow(), 4);
+					Object nomeObj = table.getValueAt(table.getSelectedRow(), 5);
+
+					String idStr = idObj.toString();
+					String chaveStr = chaveObj.toString();
+					String saldoStr = saldoObj.toString();
+					String limiteStr = limiteObj.toString();
+					String cpfStr = cpfObj.toString();
+					String nomeStr = nomeObj.toString();
+					
+					textField.setText(idStr);
+					label_saldo.setText("Saldo:" + saldoStr);
+					textField_1.setText(cpfStr);
+					textField_2.setText(nomeStr);
+					textField_3.setText(limiteStr);
+					textField_4.setText(chaveStr);
+					label_6.setText("selecionado=" + idStr);
+					// ===== FIM DA CORREÇÃO =====
 				}
 			}
 		});
@@ -170,8 +182,8 @@ public class TelaConta {
 					int cpf = Integer.parseInt(textField_1.getText());
 					String nome = textField_2.getText();
 
-					if (!nome.matches("^[a-zA-Z\s]+$"))
-						throw new Exception("nome deve ter letras e espa�os!");
+					if (!nome.matches("^[a-zA-Z\\s]+$"))
+						throw new Exception("nome deve ter letras e espaos!");
 
 					if (chave.isEmpty())
 						throw new Exception("chave nao pode ser vazia!");
@@ -237,7 +249,7 @@ public class TelaConta {
 						throw new Exception("chave " + chave + " nao existe!");
 
 					if(conta.getSaldo() != 0) 
-						throw new Exception("Conta com saldo n�o pode ser apagada ");
+						throw new Exception("Conta com saldo no pode ser apagada ");
 
 					Cliente cli = conta.getCliente();
 					cli.setConta(null); // desvincula cliente
@@ -271,7 +283,7 @@ public class TelaConta {
 						throw new Exception("Chave inexistente: " + chave);
 
 					if (!(conta instanceof ContaEspecial))
-						throw new Exception("Conta n�o � especial, n�o tem limite!");
+						throw new Exception("Conta no  especial, no tem limite!");
 
 					String resposta = JOptionPane.showInputDialog(frame, "novo limite da conta");
 					if (resposta == null || resposta.isEmpty())

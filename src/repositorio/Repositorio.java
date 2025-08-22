@@ -15,7 +15,10 @@ import modelo.Lancamento;
 
 public class Repositorio {
     private static TreeMap<String, Conta> contasPIKS = new TreeMap<>();
-    // O mapa de clientes agora usa Integer como chave, conforme o modelo.
+    
+    // O mapa de clientes usa a classe wrapper 'Integer' como chave, 
+    // conforme a exigência do Java para tipos genéricos. 
+    // Isso corresponde ao 'integer' conceitual do diagrama UML.
     private static TreeMap<Integer, Cliente> clientesCPF = new TreeMap<>();
 
     // O bloco static garante que a leitura dos objetos seja feita assim que a classe for carregada.
