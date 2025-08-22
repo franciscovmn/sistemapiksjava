@@ -9,13 +9,22 @@ public class Conta {
     private Cliente cliente;
     private ArrayList<Lancamento> lancamentos = new ArrayList<>();
 
+    // Construtores...
     public Conta(int id, String chavePiks) {
         this.id = id;
         this.chavePiks = chavePiks;
-        this.saldo = 0.0; // Saldo inicial padrão
+        this.saldo = 0.0;
         this.lancamentos = new ArrayList<>();
     }
+    
+    public Conta(int id, String chavePiks, double saldo, Cliente cliente) {
+        this.id = id;
+        this.chavePiks = chavePiks;
+        this.saldo = saldo;
+        this.cliente = cliente;
+    }
 
+    // Getters e Setters...
     public int getId() { return id; }
     public String getChavePiks() { return chavePiks; }
     public void setChavePiks(String chavePiks) { this.chavePiks = chavePiks; }
@@ -26,6 +35,7 @@ public class Conta {
     public ArrayList<Lancamento> getLancamentos() { return lancamentos; }
     public void adicionarLanc(Lancamento lanc) { this.lancamentos.add(lanc); }
 
+    // Métodos de operação...
     public void creditar(double valor) {
         if (valor <= 0) throw new IllegalArgumentException("Valor do crédito deve ser positivo");
         this.saldo += valor;
@@ -40,13 +50,22 @@ public class Conta {
         this.adicionarLanc(new Lancamento(this.chavePiks, valor, "-"));
     }
     
+    // ---- A MÁGICA ACONTECE AQUI ----
+
+    // Método principal de transferência
     public void transferir(double valor, Conta destino) {
         if (this.equals(destino))
             throw new IllegalArgumentException("Conta de origem e destino devem ser diferentes");
-            
         this.debitar(valor);
         destino.creditar(valor);
     }
+    
+    // Método SOBRECARREGADO para aceitar a ordem de argumentos do professor
+    public void transferir(Conta destino, double valor) {
+        // Simplesmente chama o outro método na ordem correta
+        this.transferir(valor, destino);
+    }
+    // ------------------------------------
 
     @Override
     public String toString() {
