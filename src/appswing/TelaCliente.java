@@ -74,11 +74,16 @@ public class TelaCliente {
 	        public void mouseClicked(MouseEvent e) {
 	            label.setText("");
 	            if (table.getSelectedRow() >= 0) {
-	                String cpf = (String) table.getValueAt(table.getSelectedRow(), 0);
+	                // ===== INÍCIO DA CORREÇÃO =====
+	                // A coluna 0 (cpf) agora retorna um Integer.
+	                // É preciso converter para String antes de usar no setText.
+	                Integer cpf = (Integer) table.getValueAt(table.getSelectedRow(), 0);
 	                String nome = (String) table.getValueAt(table.getSelectedRow(), 1);
-	                textField_CPF.setText(cpf);
+
+	                textField_CPF.setText(cpf.toString()); // Convertendo o Integer para String
 	                textField_Nome.setText(nome);
-	                label.setText("selecionado=" + cpf);
+	                label.setText("selecionado=" + cpf.toString());
+					// ===== FIM DA CORREÇÃO =====
 	            }
 	        }
 	    });
@@ -166,16 +171,12 @@ public class TelaCliente {
 	    frame.getContentPane().add(label_Nome);
 
 	    textField_CPF = new JTextField();
-	    // A LINHA ABAIXO FOI REMOVIDA
-	    // textField_CPF.setEditable(false);
 	    textField_CPF.setFont(new Font("Dialog", Font.PLAIN, 12));
 	    textField_CPF.setColumns(10);
 	    textField_CPF.setBounds(72, 194, 104, 20);
 	    frame.getContentPane().add(textField_CPF);
 
 	    textField_Nome = new JTextField();
-	    // A LINHA ABAIXO FOI REMOVIDA
-	    // textField_Nome.setEditable(false);
 	    textField_Nome.setFont(new Font("Dialog", Font.PLAIN, 12));
 	    textField_Nome.setColumns(10);
 	    textField_Nome.setBounds(72, 223, 157, 20);
@@ -219,21 +220,19 @@ public class TelaCliente {
 	    frame.getContentPane().add(button_1);
 	}
 
-	// *****************************
 	public void listagem() {
 		try {
 			List<Cliente> lista = Repositorio.getClientes();
 
-			// model contem todas as linhas e colunas da tabela
 			DefaultTableModel model = new DefaultTableModel();
 			table.setModel(model);
 
-			// colunas
 			model.addColumn("cpf");
 			model.addColumn("nome");
 			model.addColumn("id conta");
-			// linhas
+
 			for (Cliente cli : lista) {
+				// cli.getCpf() retorna um int, que é adicionado corretamente como Integer na tabela.
 				model.addRow(new Object[] { cli.getCpf(), cli.getNome(), cli.getConta().getId() });
 			}
 			label_8.setText("resultados: " + lista.size() + " clientes - selecione uma linha");
@@ -241,6 +240,5 @@ public class TelaCliente {
 		} catch (Exception ex) {
 			label.setText(ex.getMessage());
 		}
-
 	}
 }

@@ -171,7 +171,7 @@ public class TelaConta {
 					String nome = textField_2.getText();
 
 					if (!nome.matches("^[a-zA-Z\s]+$"))
-						throw new Exception("nome deve ter letras e espaços!");
+						throw new Exception("nome deve ter letras e espaï¿½os!");
 
 					if (chave.isEmpty())
 						throw new Exception("chave nao pode ser vazia!");
@@ -237,7 +237,7 @@ public class TelaConta {
 						throw new Exception("chave " + chave + " nao existe!");
 
 					if(conta.getSaldo() != 0) 
-						throw new Exception("Conta com saldo não pode ser apagada ");
+						throw new Exception("Conta com saldo nï¿½o pode ser apagada ");
 
 					Cliente cli = conta.getCliente();
 					cli.setConta(null); // desvincula cliente
@@ -271,7 +271,7 @@ public class TelaConta {
 						throw new Exception("Chave inexistente: " + chave);
 
 					if (!(conta instanceof ContaEspecial))
-						throw new Exception("Conta não é especial, não tem limite!");
+						throw new Exception("Conta nï¿½o ï¿½ especial, nï¿½o tem limite!");
 
 					String resposta = JOptionPane.showInputDialog(frame, "novo limite da conta");
 					if (resposta == null || resposta.isEmpty())
@@ -394,12 +394,16 @@ public class TelaConta {
 
 					if (novachave == null || novachave.isEmpty())
 						throw new Exception("nova chave vazia!");
+					
+					if (novachave.equals(chave))
+						throw new Exception("a nova chave nÃ£o pode ser igual Ã  antiga!");
 
 					Conta contaaux = Repositorio.localizarConta(novachave);
 					if (contaaux != null)
 						throw new Exception("nova chave ja existe: " + novachave);
 
-					conta.setChavePiks(novachave);
+					// CORREÃ‡ÃƒO: Utiliza o mÃ©todo do repositÃ³rio para garantir a consistÃªncia
+					Repositorio.atualizarChavePiks(chave, novachave);
 					Repositorio.gravarObjetos();
 					label.setText("chave alterada de " + chave + " para " + novachave);
 					listagem();

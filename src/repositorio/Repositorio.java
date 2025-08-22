@@ -15,6 +15,7 @@ import modelo.Lancamento;
 
 public class Repositorio {
     private static TreeMap<String, Conta> contasPIKS = new TreeMap<>();
+    // O mapa de clientes agora usa Integer como chave, conforme o modelo.
     private static TreeMap<Integer, Cliente> clientesCPF = new TreeMap<>();
 
     // O bloco static garante que a leitura dos objetos seja feita assim que a classe for carregada.
@@ -34,12 +35,23 @@ public class Repositorio {
         return contasPIKS.get(chave);
     }
 
+    // NOVO MÉTODO: Essencial para alterar a chave PIKS de forma consistente.
+    public static void atualizarChavePiks(String chaveAntiga, String chaveNova) {
+        Conta conta = contasPIKS.remove(chaveAntiga);
+        if (conta != null) {
+            conta.setChavePiks(chaveNova);
+            contasPIKS.put(chaveNova, conta);
+        }
+    }
+
     public static void adicionarCliente(Cliente c) {
-        clientesCPF.put(Integer.parseInt(c.getCpf()), c);
+        // Não é mais necessário fazer o parse, pois o CPF já é int.
+        clientesCPF.put(c.getCpf(), c);
     }
 
     public static void removerCliente(Cliente c) {
-        clientesCPF.remove(Integer.parseInt(c.getCpf()));
+        // Não é mais necessário fazer o parse.
+        clientesCPF.remove(c.getCpf());
     }
 
     public static Cliente localizarCliente(int cpf) {
@@ -80,10 +92,10 @@ public class Repositorio {
                 String chave = partes[1];
                 double saldo = Double.parseDouble(partes[2]);
                 double limite = Double.parseDouble(partes[3]);
-                int cpf = Integer.parseInt(partes[4]);
+                int cpf = Integer.parseInt(partes[4]); // CPF lido como int.
                 String nome = partes[5];
 
-                Cliente cliente = new Cliente(String.valueOf(cpf), nome, null);
+                Cliente cliente = new Cliente(cpf, nome, null); // Construtor usa cpf int.
                 Conta conta;
                 if (limite > 0) {
                     conta = new ContaEspecial(id, chave, saldo, cliente, limite);
@@ -138,6 +150,7 @@ public class Repositorio {
                     limite = ((ContaEspecial) conta).getLimite();
                 }
                 
+                // Grava o CPF (int) diretamente.
                 String linhaConta = conta.getId() + ";" + conta.getChavePiks() + ";" + conta.getSaldo() + ";" + limite + ";" +
                                     conta.getCliente().getCpf() + ";" + conta.getCliente().getNome();
                 writerContas.write(linhaConta + "\n");
