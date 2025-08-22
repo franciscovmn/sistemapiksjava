@@ -37,39 +37,61 @@ public class Conta {
 
     // Métodos de operação...
     public void creditar(double valor) {
-        if (valor <= 0) throw new IllegalArgumentException("Valor do crédito deve ser positivo");
+        if (valor <= 0) {
+            throw new IllegalArgumentException("Valor do crédito deve ser positivo.");
+        }
         this.saldo += valor;
         this.adicionarLanc(new Lancamento(this.chavePiks, valor, "+"));
     }
 
     public void debitar(double valor) {
-        if (valor <= 0) throw new IllegalArgumentException("Valor do débito deve ser positivo");
-        if (this.saldo - valor < 0)
-            throw new IllegalStateException("Conta comum não pode ter saldo negativo");
+        if (valor <= 0) {
+            throw new IllegalArgumentException("Valor do débito deve ser positivo.");
+        }
+        if (this.saldo - valor < 0) {
+            throw new IllegalStateException("Saldo insuficiente. Conta comum não pode ter saldo negativo.");
+        }
         this.saldo -= valor;
         this.adicionarLanc(new Lancamento(this.chavePiks, valor, "-"));
     }
     
-    // ---- A MÁGICA ACONTECE AQUI ----
+    // ---- CORREÇÕES APLICADAS AQUI ----
 
-    // Método principal de transferência
+    /**
+     * Método principal de transferência.
+     * Realiza verificações de segurança antes de efetuar a transação.
+     * @param valor O montante a ser transferido.
+     * @param destino A conta que receberá o valor.
+     */
     public void transferir(double valor, Conta destino) {
-        if (this.equals(destino))
-            throw new IllegalArgumentException("Conta de origem e destino devem ser diferentes");
+        // CORREÇÃO 1: Adicionada verificação para garantir que o destino não é nulo.
+        if (destino == null) {
+            throw new IllegalArgumentException("A conta de destino não pode ser nula.");
+        }
+        
+        // CORREÇÃO 2: A verificação de contas diferentes foi movida para o início,
+        // garantindo que a regra de negócio seja checada antes de qualquer operação.
+        if (this.equals(destino)) {
+            throw new IllegalArgumentException("Conta de origem e destino devem ser diferentes.");
+        }
+
+        // A lógica de débito e crédito permanece a mesma, pois já é segura.
+        // Se this.debitar() falhar, a exceção interromperá o método antes do crédito.
         this.debitar(valor);
         destino.creditar(valor);
     }
     
-    // Método SOBRECARREGADO para aceitar a ordem de argumentos do professor
+    // Método sobrecarregado (mantido como estava, pois é uma boa solução)
     public void transferir(Conta destino, double valor) {
-        // Simplesmente chama o outro método na ordem correta
         this.transferir(valor, destino);
     }
     // ------------------------------------
 
     @Override
     public String toString() {
+        String cpfCliente = (cliente != null) ? cliente.getCpf() : "N/A";
+        String nomeCliente = (cliente != null) ? cliente.getNome() : "N/A";
         return String.format("Conta[id=%d, chave=%s, saldo=%.2f, cpf=%s, nome=%s]",
-                id, chavePiks, saldo, cliente.getCpf(), cliente.getNome());
+                id, chavePiks, saldo, cpfCliente, nomeCliente);
     }
 }
